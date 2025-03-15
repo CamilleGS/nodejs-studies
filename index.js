@@ -42,6 +42,21 @@ app.listen(port, ()=>{ //avisar em qual porta a applicatioin vai rodar
 
 const users = []
 
+const checkUserId = (resquest, response, next) =>{
+    const {id} = resquest.params
+
+    const index = users.findIndex(user => user.id === id)
+
+    if(index < 0){
+        return response.status(404).json({message: "user not found"})
+    }
+
+    resquest.userIndex = index
+    resquest.userId = id
+
+    next()
+}
+
 app.get('/users', (request, response) => {
     return response.json(users)
 })
@@ -57,18 +72,15 @@ app.post('/users', (request, response) => {
 })
 
 
-app.put('/users/:id', (resquest, response) =>{
-    const {id} = resquest.params
+app.put('/users/:id',checkUserId, (resquest, response) =>{
     const {name, age} = resquest.body
+    const index = resquest.userIndex
+    const id = resquest.userId
 
     const updateUser = {id, name, age}
 
     //da pra usar: filter, find, findIndex
-    const index = users.findIndex(user => user.id === id)
-
-    if(index < 0){
-        return response.status(404).json({message: "user not found"})
-    }
+    
 
     
     users[index] = updateUser
@@ -76,16 +88,15 @@ app.put('/users/:id', (resquest, response) =>{
 })
 
 
-app.delete('/users/:id', (resquest, response) =>{
-    const {id} = resquest.params
+app.delete('/users/:id',checkUserId, (resquest, response) =>{
+    const index = resquest.userIndex
 
-    const index = users.findIndex(index => index.id === id)
-
-    if(index < 0){
-        return response.status(404).json({message: "user not found"})
-    }
+ 
 
     users.splice(index,1) //item do item zero e deleta uma posição ou seja só o indice 0
     return response.status(204).json()
 
 })
+
+
+
